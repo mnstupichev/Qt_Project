@@ -6,13 +6,20 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, \
     QFileDialog, QInputDialog, QErrorMessage
 from grafix import Ui_MainWindow
 from PhotoMainClass import Photo
+import sqlite3
 
+
+def add_to_db(action):
+    db = cur.execute("""INSERT INTO actions (action)
+    VALUES
+    (?)
+    ;""", (action,))
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.first = False
-        self.koeffs_arr = {'new_2': [0, 0, 10],
+        self.koeffs_arr = {'turbidity': [0, 0, 10],
                            'hightlight': [0, 3, 5],
                            'brillance': [100, 3, 100]}
         self.selected_filter = None
@@ -24,8 +31,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.objectsnames = []
         self.undofiles = []
         self.FILENAME = 'data_change/NEW.png'
-        self.this_photo = Photo()
-        self.hide_objects = {self.verticalLayout: [self.new_2, self.brillance,
+        self.main_photo = Photo()
+        self.hide_objects = {self.verticalLayout: [self.turbidity, self.brillance,
                                                    self.hightlight],
                              self.verticalLayout_4: [self.mirror, self.rotate_90],
                              self.verticalLayout_2: [self.label_1, self.label_2,
@@ -38,11 +45,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.filter_photo()
         self.open()
 
+
     def style_sheet(self):
-        [obj.clicked.connect(self.more_good_file) for obj in self.hide_objects[self.verticalLayout]]
+        [obj.clicked.connect(self.value_for_edditor) for obj in self.hide_objects[self.verticalLayout]]
         [obj.setAlignment(Qt.AlignCenter) for obj in self.hide_objects[self.verticalLayout_2]]
-        self.setStyleSheet("background-color: rgb(100, 100, 100);")
-        self.imageplace.setStyleSheet("background-color: rgb(155, 155, 155)")
+        self.setStyleSheet("background-color: rgb(61, 43, 33);")
+        self.imageplace.setStyleSheet("background-color: rgb(155, 120, 80)")
         self.menubar.setStyleSheet("background-color: rgb(55, 55, 55)")
         for objs in self.hide_objects.items():
             for obj in objs[1]:
@@ -54,18 +62,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.renamephotoact.changed.connect(self.rename)
         self.savephotoact.changed.connect(self.save)
         self.reverse.clicked.connect(self.reverse_image)
-        self.edits.clicked.connect(self.edit_image)
+        self.edits.clicked.connect(self.change_color_of_image)
         self.filters.clicked.connect(self.filter_photo)
         self.valuegforeditor.valueChanged.connect(self.re_edit_photo)
         self.rotate_90.clicked.connect(self.flip_90)
         self.mirror.clicked.connect(self.flip_to_bottom)
 
     def flip_90(self):
-        self.this_photo.flip_90()
+        self.main_photo.flip_90()
         self.update_main_photo('data_change/NEW.png', True)
 
     def flip_to_bottom(self):
-        self.this_photo.flip_to_bottom()
+        self.main_photo.flip_to_bottom()
         self.update_main_photo('data_change/NEW.png', True)
 
     def filter_photo(self):
@@ -78,15 +86,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             name_file = f'cash_image/min_{name_filter}'
             exec(f'self.label_{i + 1}.setPixmap(QPixmap(name_file))')
             exec(f'self.label_{i + 1}.clicked.connect(self.photo_selected)')
-            print(name_file, 'up to date')
+            add_to_db(f'{name_file} up to date')
 
     def photo_selected(self):
         name_filter = self.filters_name[int(self.sender().objectName()[-1]) - 1]
         name_file = f'cash_image/{name_filter}'
-        print(name_file, 'photo_selected')
+        add_to_db(f'{name_file} photo_selected')
         self.update_main_photo(name_file)
 
-    def edit_image(self):
+    def change_color_of_image(self):
         [obj.hide() for obj in self.hide_objects[self.verticalLayout_4]]
         [obj.hide() for obj in self.hide_objects[self.verticalLayout_2]]
         [obj.show() for obj in self.hide_objects[self.verticalLayout]]
@@ -97,7 +105,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         [obj.show() for obj in self.hide_objects[self.verticalLayout_4]]
 
     def save(self):
-        print(self.FILENAME, self.undofiles[-1])
+        add_to_db(f'{self.FILENAME} {self.undofiles[-1]}')
         QPixmap(self.FILENAME).save(self.undofiles[-1])
 
     def rename(self):
@@ -128,12 +136,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         x, y = pixmap.size().width(), pixmap.size().height()
         procent = min((100 * 800) / x, (100 * 800) / y) / 100
         self.imageplace.setPixmap(pixmap.scaled(int(procent * x), int(procent * y)))
-        self.this_photo = Photo(self.FILENAME) if update else self.this_photo
+        self.main_photo = Photo(self.FILENAME) if update else self.main_photo
         self.update_photo_filter()
 
-    def more_good_file(self):
+    def value_for_edditor(self):
         self.selected_filter = self.sender().objectName()
-        print(self.koeffs_arr[self.selected_filter])
+        add_to_db(f'{self.koeffs_arr[self.selected_filter]}')
         self.valuegforeditor.setMinimum(self.koeffs_arr[self.selected_filter][1])
         self.valuegforeditor.setMaximum(self.koeffs_arr[self.selected_filter][2])
         self.valuegforeditor.setValue(self.koeffs_arr[self.selected_filter][0])
@@ -142,14 +150,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def re_edit_photo(self):
         if self.selected_filter is not None and self.first:
             koeff = self.valuegforeditor.value()
-            print(koeff)
-            print(self.selected_filter, 're edit')
-            if self.selected_filter == 'new_2':
-                self.this_photo.change_gaussian(koeff)
+            add_to_db(f'{koeff}')
+            add_to_db(f'{self.selected_filter} re edit')
+            if self.selected_filter == 'turbidity':
+                self.main_photo.change_turbidity(koeff)
             elif self.selected_filter == 'hightlight':
-                self.this_photo.gray_photo_with_koeff(koeff)
+                self.main_photo.gray_photo_with_koeff(koeff)
             elif self.selected_filter == 'brillance':
-                self.this_photo.quantize(koeff)
+                self.main_photo.quantize(koeff)
             self.update_main_photo('data_change/NEW.png', True)
         elif not self.first:
             self.first = True
@@ -160,8 +168,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    conn = sqlite3.connect('actions.db')
+    cur = conn.cursor()
     app = QApplication(sys.argv)
     ex = MainWindow()
     ex.showMaximized()
     sys.excepthook = ex.except_hook
     sys.exit(app.exec())
+    db = cur.execute("""SELECT * FROM actions""").fetchall()
+    for line in result:
+        print(*line)
+    db = cur.execute("""DELETE FROM actions""")
+    conn.close()

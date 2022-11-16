@@ -3,7 +3,7 @@ import numpy as np
 
 
 def save_image(filter_name, image):
-    print(f'cash_image/{filter_name}.png', 'photo')
+    add_to_db(f'cash_image/{filter_name}.png photo')
     image.save(f'cash_image/{filter_name}.png')
     image = image.resize((130, 130))
     image.save(f'cash_image/min_{filter_name}.png')
@@ -22,7 +22,7 @@ def curve(pixel):
 class Photo:
     def __init__(self, name_file=None):
         if name_file is not None:
-            print(name_file, 'photo')
+            add_to_db(f'{name_file} photo')
             self.image_pil = Image.open(name_file)
             self.image_array = np.array(self.image_pil)
             self.save_all_in_cash()
@@ -54,12 +54,12 @@ class Photo:
         image = Image.fromarray(picture)
         save_image('negative', image)
 
-    def gray_photo(self, koeff=3):
+    def gray_photo(self):
         picture = self.image_array[:]
         summa = picture[:, :, 0] + picture[:, :, 1] + picture[:, :, 2]
-        picture[:, :, 0] = summa // koeff
-        picture[:, :, 1] = summa // koeff
-        picture[:, :, 2] = summa // koeff
+        picture[:, :, 0] = summa // 3
+        picture[:, :, 1] = summa // 3
+        picture[:, :, 2] = summa // 3
         image = Image.fromarray(picture)
         save_image('gray', image)
 
@@ -76,11 +76,11 @@ class Photo:
         image = Image.fromarray(picture)
         save_image('cold', image)
 
-    def change_gaussian(self, radius):
+    def change_turbidity(self, radius):
         im2 = self.image_pil.filter(ImageFilter.GaussianBlur(radius=radius))
         im2.save('data_change/NEW.png')
 
-    def gray_photo_with_koeff(self, koeff=3):
+    def gray_photo_with_koeff(self, koeff):
         picture = self.image_array[:]
         summa = picture[:, :, 0] + picture[:, :, 1] + picture[:, :, 2]
         picture[:, :, 0] = summa // koeff
