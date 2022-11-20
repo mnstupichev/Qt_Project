@@ -1,6 +1,14 @@
 from PIL import Image, ImageFilter
 import numpy as np
+import sqlite3
 
+conn = sqlite3.connect('actions.db')
+cur = conn.cursor()
+def add_to_db(action):
+    db = cur.execute("""INSERT INTO actions (action)
+    VALUES
+    (?)
+    ;""", (action,))
 
 def save_image(filter_name, image):
     add_to_db(f'cash_image/{filter_name}.png photo')
