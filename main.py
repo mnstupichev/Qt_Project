@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, \
     QFileDialog, QInputDialog, QErrorMessage
-from grafix import Ui_MainWindow
+from grafix1 import Ui_MainWindow
 # from PhotoMainClass import Photo
 import sqlite3
 from PIL import Image, ImageFilter
