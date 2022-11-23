@@ -133,9 +133,9 @@ class Ui_MainWindow(object):
         self.valuegforeditor.setOrientation(QtCore.Qt.Horizontal)
         self.valuegforeditor.setObjectName("valuegforeditor")
         self.verticalLayout_3.addWidget(self.valuegforeditor)
-        self.pushButton = QtWidgets.QPushButton(self.verticalLayoutWidget_3)
-        self.pushButton.setObjectName("pushButton")
-        self.verticalLayout_3.addWidget(self.pushButton)
+        self.make_data = QtWidgets.QPushButton(self.verticalLayoutWidget_3)
+        self.make_data.setObjectName("pushButton")
+        self.verticalLayout_3.addWidget(self.make_data)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1219, 22))
@@ -183,7 +183,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "Data"))
+        self.make_data.setText(_translate("MainWindow", "Data"))
         self.menu.setTitle(_translate("MainWindow", "File"))
         self.openphotoact.setText(_translate("MainWindow", "Open"))
         self.openphotoact.setWhatsThis(_translate("MainWindow", "Ctrl+O"))

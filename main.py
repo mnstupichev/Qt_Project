@@ -1,140 +1,16 @@
 import sys
 
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, \
     QFileDialog, QInputDialog, QErrorMessage
+
 from grafix import Ui_MainWindow
-from Database import Ui_MainWindow1
-# from PhotoMainClass import Photo
-import sqlite3
-from PIL import Image, ImageFilter
-import numpy as np
+from DataClass import Data
+from DatabaseWindowClass import DatabaseWindow
+from PhotoMainClass import Photo
 
-class Data:
-    def __init__(self):
-        self.conn = sqlite3.connect('actions.db')
-
-
-class Photo():
-    def __init__(self, db, name_file=None):
-        self.db = db
-        self.cur = self.db.conn.cursor()
-        if name_file is not None:
-            self.add_to_db(f'{name_file} photo')
-            self.image_pil = Image.open(name_file)
-            self.image_array = np.array(self.image_pil)
-            self.save_all_in_cash()
-
-    def add_to_db(self, action):
-        self.cur.execute("""INSERT INTO actions (action)
-        VALUES
-        (?)
-        ;""", (action,))
-
-    def save_image(self, filter_name, image):
-        self.add_to_db(f'cash_image/{filter_name}.png photo')
-        image.save(f'cash_image/{filter_name}.png')
-        image = image.resize((130, 130))
-        image.save(f'cash_image/min_{filter_name}.png')
-
-    def curve(self, pixel):
-        r, g, b = pixel
-        brightness = r + g + b
-        if brightness < 60:
-            k = 60 / brightness if brightness != 0 else 1
-            return min(255, int(r * k ** 2)), min(255, int(g * k ** 2)), min(255, int(b * k ** 2))
-        else:
-            return r, g, b
-    def save_all_in_cash(self):
-        self.negative_photo()
-        self.save_image('real', self.image_pil)
-        self.warm_photo()
-        self.gray_photo()
-        self.cold_photo()
-        self.change_chanels()
-
-    def change_chanels(self):
-        im = self.image_pil
-        pixels = im.load()
-        x, y = im.size
-
-        for i in range(x):
-            for j in range(y):
-                pixels[i, j] = self.curve(pixels[i, j])
-
-        self.save_image('change_chanels', im)
-
-    def negative_photo(self):
-        picture = self.image_array[:]
-        picture[:, :, 0] = 255 - picture[:, :, 0]
-        picture[:, :, 1] = 255 - picture[:, :, 1]
-        picture[:, :, 2] = 255 - picture[:, :, 2]
-        image = Image.fromarray(picture)
-        self.save_image('negative', image)
-
-    def gray_photo(self):
-        picture = self.image_array[:]
-        summa = picture[:, :, 0] + picture[:, :, 1] + picture[:, :, 2]
-        picture[:, :, 0] = summa // 3
-        picture[:, :, 1] = summa // 3
-        picture[:, :, 2] = summa // 3
-        image = Image.fromarray(picture)
-        self.save_image('gray', image)
-
-    def warm_photo(self):
-        picture = self.image_array[:]
-        picture[:, :, 0] = 255
-        picture[:, :, 2] = 200
-        image = Image.fromarray(picture)
-        self.save_image('warm', image)
-
-    def cold_photo(self):
-        picture = self.image_array[:]
-        picture[:, :, 2] = 255
-        image = Image.fromarray(picture)
-        self.save_image('cold', image)
-
-    def change_turbidity(self, radius):
-        im2 = self.image_pil.filter(ImageFilter.GaussianBlur(radius=radius))
-        im2.save('data_change/NEW.png')
-
-    def gray_photo_with_koeff(self, koeff):
-        picture = self.image_array[:]
-        summa = picture[:, :, 0] + picture[:, :, 1] + picture[:, :, 2]
-        picture[:, :, 0] = summa // koeff
-        picture[:, :, 1] = summa // koeff
-        picture[:, :, 2] = summa // koeff
-        image = Image.fromarray(picture)
-        image.save('data_change/NEW.png')
-
-    def quantize(self, koeff):
-        im = self.image_pil.quantize(koeff)
-        im.save('data_change/NEW.png')
-
-    def flip_90(self):
-        im = self.image_pil
-        im2 = im.transpose(Image.ROTATE_90)
-        im2.save('data_change/NEW.png')
-
-    def flip_to_bottom(self):
-        im = self.image_pil
-        im2 = im.transpose(Image.FLIP_LEFT_RIGHT)
-        im2.save('data_change/NEW.png')
-
-class DatabaseWindow(QMainWindow, Ui_MainWindow1):
-    def __init__(self, db):
-        super().__init__()
-        self.db = db
-        self.cur = self.db.conn.cursor()
-        self.tableWidget.itemChanged.connect(self.item_changed)
-
-    result = db.conn.cursor().execute("""SELECT * FROM actions""").fetchall()
-    for line in result:
-        print(*line)
-    db.conn.cursor().execute("""DELETE FROM actions""")
-
-    def item_changed(self):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, db):
@@ -154,7 +30,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.objectsnames = []
         self.undofiles = []
         self.FILENAME = 'data_change/NEW.png'
-        self.main_photo = Photo(db= db)
+        self.main_photo = Photo(db=db)
         self.hide_objects = {self.verticalLayout: [self.turbidity, self.brillance,
                                                    self.hightlight],
                              self.verticalLayout_4: [self.mirror, self.rotate_90],
@@ -195,14 +71,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.valuegforeditor.valueChanged.connect(self.re_edit_photo)
         self.rotate_90.clicked.connect(self.flip_90)
         self.mirror.clicked.connect(self.flip_to_bottom)
-        self.pushButton.clicked.connect(self.open_database)
+        self.make_data.clicked.connect(self.open_database)
 
     def open_database(self):
-        app1 = QApplication(sys.argv)
-        ex = MainWindow(db)
-        ex.showMaximized()
-        sys.excepthook = ex.except_hook
-        sys.exit(app1.exec())
+        app1 = QtWidgets.QWidget()
+        ex1 = DatabaseWindow(self.db)
+        ex1.show()
+        sys.exit(app1.exec_())
 
     def flip_90(self):
         self.main_photo.flip_90()
@@ -257,8 +132,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def open(self):
         new_filename = QFileDialog.getOpenFileName(
-                self, 'Выбрать картинку', '',
-                '*.png;*.jpg;*.bmp;*.jpeg')[0]
+            self, 'Выбрать картинку', '',
+            '*.png;*.jpg;*.bmp;*.jpeg')[0]
         if new_filename != '':
             file_name_for_main = new_filename[new_filename.rfind('/') + 1:]
             self.undofiles.append(new_filename)
@@ -280,7 +155,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.add_to_db(f'{self.koeffs_arr[self.selected_filter]}')
         self.valuegforeditor.setMinimum(self.koeffs_arr[self.selected_filter][1])
         self.valuegforeditor.setMaximum(self.koeffs_arr[self.selected_filter][2])
-        self.valuegforeditor.setValue(self.koeffs_arr[self.selected_filter][0])
+        self.valuegforeditor.setMinimum(self.koeffs_arr[self.selected_filter][0])
         self.first = False
 
     def re_edit_photo(self):
@@ -303,16 +178,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         sys.__excepthook__(cls, exception, traceback)
 
 
-db = Data()
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    db = Data()
     ex = MainWindow(db)
     ex.showMaximized()
     sys.excepthook = ex.except_hook
     sys.exit(app.exec())
-
-result = db.conn.cursor().execute("""SELECT * FROM actions""").fetchall()
-for line in result:
-    print(*line)
-db.conn.cursor().execute("""DELETE FROM actions""")
