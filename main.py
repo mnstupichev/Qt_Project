@@ -18,8 +18,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.db = db
         self.cur = self.db.conn.cursor()
         self.first = False
-        self.koeffs_arr = {'turbidity': [0, 0, 10],
-                           'hightlight': [0, 3, 5],
+        self.koeffs_arr = {'turbidity': [0, 0, 100],
+                           'hightlight': [0, 3, 40],
                            'brillance': [100, 3, 100]}
         self.selected_filter = None
         self.setupUi(self)
@@ -51,7 +51,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ;""", (action,))
 
     def style_sheet(self):
-        [obj.clicked.connect(self.value_for_edditor) for obj in self.hide_objects[self.verticalLayout]]
+        [obj.clicked.connect(self.value_for_editor) for obj in self.hide_objects[self.verticalLayout]]
         [obj.setAlignment(Qt.AlignCenter) for obj in self.hide_objects[self.verticalLayout_2]]
         self.setStyleSheet("background-color: rgb(61, 43, 33);")
         self.imageplace.setStyleSheet("background-color: rgb(155, 120, 80)")
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.reverse.clicked.connect(self.reverse_image)
         self.edits.clicked.connect(self.change_color_of_image)
         self.filters.clicked.connect(self.filter_photo)
-        self.valuegforeditor.valueChanged.connect(self.re_edit_photo)
+        self.valueforeditor.valueChanged.connect(self.re_edit_photo)
         self.rotate_90.clicked.connect(self.flip_90)
         self.mirror.clicked.connect(self.flip_to_bottom)
         self.make_data.clicked.connect(self.open_database)
@@ -97,13 +97,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             name_file = f'cash_image/min_{name_filter}'
             exec(f'self.label_{i + 1}.setPixmap(QPixmap(name_file))')
             exec(f'self.label_{i + 1}.clicked.connect(self.photo_selected)')
-            self.add_to_db(f'{name_file} up to date')
+            self.add_to_db(f'{name_file} has been updated')
 
     def photo_selected(self):
         name_filter = self.filters_name[int(self.sender().objectName()[-1]) - 1]
         name_file = f'cash_image/{name_filter}'
         self.add_to_db(f'{name_file} photo_selected')
-        self.update_main_photo(name_file)
+        self.update_main_photo(name_file, True)
 
     def change_color_of_image(self):
         [obj.hide() for obj in self.hide_objects[self.verticalLayout_4]]
@@ -140,27 +140,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QPixmap(new_filename).save('data_change/' + file_name_for_main)
             self.update_main_photo(new_filename, True)
             self.count_main_change += 1
+        self.valueforeditor.setValue(0)
+        self.first = False
 
     def update_main_photo(self, new_filename, update=False):
         pixmap = QPixmap(new_filename)
         pixmap.save(self.FILENAME)
         x, y = pixmap.size().width(), pixmap.size().height()
-        procent = min((100 * 800) / x, (100 * 800) / y) / 100
-        self.imageplace.setPixmap(pixmap.scaled(int(procent * x), int(procent * y)))
+        percent = min((100 * 800) / x, (100 * 800) / y) / 100
+        self.imageplace.setPixmap(pixmap.scaled(int(percent * x), int(percent * y)))
         self.main_photo = Photo(self.db, self.FILENAME) if update else self.main_photo
         self.update_photo_filter()
 
-    def value_for_edditor(self):
+    def value_for_editor(self):
         self.selected_filter = self.sender().objectName()
         self.add_to_db(f'{self.koeffs_arr[self.selected_filter]}')
-        self.valuegforeditor.setMinimum(self.koeffs_arr[self.selected_filter][1])
-        self.valuegforeditor.setMaximum(self.koeffs_arr[self.selected_filter][2])
-        self.valuegforeditor.setMinimum(self.koeffs_arr[self.selected_filter][0])
-        self.first = False
+        self.valueforeditor.setMinimum(self.koeffs_arr[self.selected_filter][1])
+        self.valueforeditor.setMaximum(self.koeffs_arr[self.selected_filter][2])
+        self.valueforeditor.setValue(self.koeffs_arr[self.selected_filter][0])
 
     def re_edit_photo(self):
         if self.selected_filter is not None and self.first:
-            koeff = self.valuegforeditor.value()
+            koeff = self.valueforeditor.value()
             self.add_to_db(f'{koeff}')
             self.add_to_db(f'{self.selected_filter} re edit')
             if self.selected_filter == 'turbidity':
