@@ -4,7 +4,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, \
     QFileDialog, QInputDialog, QErrorMessage
-from grafix1 import Ui_MainWindow
+from grafix import Ui_MainWindow
+from Database import Ui_MainWindow1
 # from PhotoMainClass import Photo
 import sqlite3
 from PIL import Image, ImageFilter
@@ -121,6 +122,20 @@ class Photo():
         im2 = im.transpose(Image.FLIP_LEFT_RIGHT)
         im2.save('data_change/NEW.png')
 
+class DatabaseWindow(QMainWindow, Ui_MainWindow1):
+    def __init__(self, db):
+        super().__init__()
+        self.db = db
+        self.cur = self.db.conn.cursor()
+        self.tableWidget.itemChanged.connect(self.item_changed)
+
+    result = db.conn.cursor().execute("""SELECT * FROM actions""").fetchall()
+    for line in result:
+        print(*line)
+    db.conn.cursor().execute("""DELETE FROM actions""")
+
+    def item_changed(self):
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, db):
         super().__init__()
@@ -180,6 +195,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.valuegforeditor.valueChanged.connect(self.re_edit_photo)
         self.rotate_90.clicked.connect(self.flip_90)
         self.mirror.clicked.connect(self.flip_to_bottom)
+        self.pushButton.clicked.connect(self.open_database)
+
+    def open_database(self):
+        app1 = QApplication(sys.argv)
+        ex = MainWindow(db)
+        ex.showMaximized()
+        sys.excepthook = ex.except_hook
+        sys.exit(app1.exec())
 
     def flip_90(self):
         self.main_photo.flip_90()
