@@ -142,6 +142,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.count_main_change += 1
         self.valueforeditor.setValue(0)
         self.first = False
+        self.add_to_db('photo has been modified successfully')
 
     def update_main_photo(self, new_filename, update=False):
         pixmap = QPixmap(new_filename)
