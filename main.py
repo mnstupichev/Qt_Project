@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow, \
     QFileDialog, QInputDialog, QErrorMessage
 
-from grafix import Ui_MainWindow
+from design_of_main_window import Ui_MainWindow
 from DataClass import Data
 from DatabaseWindowClass import DatabaseWindow
 from PhotoMainClass import Photo
@@ -175,7 +175,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif not self.first:
             self.first = True
 
-    def except_hook(self, cls, exception, traceback):
+    def except_hook(self, cls, exception, traceback): #возвращение ошибок возникающих при работе
         self.errorwidget.showMessage(str(exception))
         sys.__excepthook__(cls, exception, traceback)
 

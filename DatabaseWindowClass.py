@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow,  QTableWidgetItem
-from Database import Ui_MainWindow1
+from design_of_database_window import Ui_MainWindow1
 
 class DatabaseWindow(QMainWindow, Ui_MainWindow1):
     def __init__(self, db):

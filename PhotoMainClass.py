@@ -6,7 +6,7 @@ class Photo():
         self.db = db
         self.cur = self.db.conn.cursor()
         if name_file is not None:
-            self.add_to_db(f'{name_file} photo')
+            self.add_to_db(f'{name_file}  new_photo')
             self.image_pil = Image.open(name_file)
             self.image_array = np.array(self.image_pil)
             self.save_all_in_cash()
